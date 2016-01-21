@@ -36,13 +36,14 @@ func RecordTimer(name string, tags map[string]string, d time.Duration) {
 func addTagsToName(name string, tags map[string]string) string {
 	// The format we want is: host.endpoint.os.browser
 	// if there's no host tag, then we don't use it.
-	var keyOrder []string
+	keyOrder := make([]string, 0, 4)
 	if _, ok := tags["host"]; ok {
 		keyOrder = append(keyOrder, "host")
 	}
 	keyOrder = append(keyOrder, "endpoint", "os", "browser")
 
-	parts := []string{name}
+	parts := make([]string, 1, 5)
+	parts[0] = name
 	for _, k := range keyOrder {
 		v, ok := tags[k]
 		if !ok || v == "" {
