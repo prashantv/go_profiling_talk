@@ -1,9 +1,9 @@
 package stats
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -42,31 +42,33 @@ func addTagsToName(name string, tags map[string]string) string {
 	}
 	keyOrder = append(keyOrder, "endpoint", "os", "browser")
 
-	parts := make([]string, 1, 5)
-	parts[0] = name
+	buf := &bytes.Buffer{}
+	buf.WriteString(name)
 	for _, k := range keyOrder {
+		buf.WriteByte('.')
+
 		v, ok := tags[k]
 		if !ok || v == "" {
-			parts = append(parts, "no-"+k)
+			buf.WriteString("no-")
+			buf.WriteString(k)
 			continue
 		}
-		parts = append(parts, clean(v))
+
+		writeClean(buf, v)
 	}
 
-	return strings.Join(parts, ".")
+	return buf.String()
 }
 
-// clean takes a string that may contain special characters, and replaces these
-// characters with a '-'.
-func clean(value string) string {
-	newStr := make([]byte, len(value))
+// writeClean cleans value (e.g. replaces special characters with '-') and
+// writes out the cleaned value to buf.
+func writeClean(buf *bytes.Buffer, value string) {
 	for i := 0; i < len(value); i++ {
 		switch c := value[i]; c {
 		case '{', '}', '/', '\\', ':', ' ', '\t', '.':
-			newStr[i] = '-'
+			buf.WriteByte('-')
 		default:
-			newStr[i] = c
+			buf.WriteByte(c)
 		}
 	}
-	return string(newStr)
 }
