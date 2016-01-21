@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -33,6 +34,12 @@ func RecordTimer(name string, tags map[string]string, d time.Duration) {
 	}
 }
 
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return &bytes.Buffer{}
+	},
+}
+
 func addTagsToName(name string, tags map[string]string) string {
 	// The format we want is: host.endpoint.os.browser
 	// if there's no host tag, then we don't use it.
@@ -42,6 +49,11 @@ func addTagsToName(name string, tags map[string]string) string {
 	}
 	keyOrder = append(keyOrder, "endpoint", "os", "browser")
 
+	// We tried to pool the object, but perf didn't get better.
+	// It's most likely due to use of defer, which itself has non-trivial overhead.
+	// buf := bufPool.Get().(*bytes.Buffer)
+	// defer bufPool.Put(buf)
+	// buf.Reset()
 	buf := &bytes.Buffer{}
 	buf.WriteString(name)
 	for _, k := range keyOrder {
