@@ -3,7 +3,6 @@ package stats
 import (
 	"flag"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -56,10 +55,17 @@ func addTagsToName(name string, tags map[string]string) string {
 	return strings.Join(parts, ".")
 }
 
-var specialChars = regexp.MustCompile(`[{}/\\:\s.]`)
-
 // clean takes a string that may contain special characters, and replaces these
 // characters with a '-'.
 func clean(value string) string {
-	return specialChars.ReplaceAllString(value, "-")
+	newStr := make([]byte, len(value))
+	for i := 0; i < len(value); i++ {
+		switch c := value[i]; c {
+		case '{', '}', '/', '\\', ':', ' ', '\t', '.':
+			newStr[i] = '-'
+		default:
+			newStr[i] = c
+		}
+	}
+	return string(newStr)
 }
